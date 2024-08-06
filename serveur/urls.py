@@ -19,6 +19,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from service.views import  LoginRegisterView, SpecialiteListView, CycleListView, payement_data, SpecialitesByFormationView
 from service.views import VilleListView, FormationListView
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
     path('admin', admin.site.urls),
@@ -30,3 +31,5 @@ urlpatterns = [
     path('payement/', payement_data, name='payment_data'),
     path('specialites/<int:formation_id>/<int:specialite_id>/<int:ville_id>', SpecialitesByFormationView.as_view(), name='specialites-by-formation'),
 ]
+
+urlpatterns += staticfiles_urlpatterns()

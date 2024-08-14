@@ -75,25 +75,25 @@ class SpecialitesByFormationView(generics.ListAPIView):
         # Collecter les spécialités de différentes sources pour les combiner plus tard
         specialites_ville = specialites.filter(etablissement__in=etablissements_in_ville).distinct()
         
-        # Étape 1: Si moins de 12 résultats, compléter avec les spécialités dans le même département
+        # Étape 1: Si moins de 1 résultats, compléter avec les spécialités dans le même département
         specialites_combined = list(specialites_ville)
-        if len(specialites_combined) < 12:
+        if len(specialites_combined) < 1:
             ville = Ville.objects.get(id=ville_id)
             departement_id = ville.departement.id
             etablissements_in_departement = Etablissement.objects.filter(lieux__departement__id=departement_id)
             specialites_departement = specialites.filter(etablissement__in=etablissements_in_departement).distinct()
             specialites_combined.extend([s for s in specialites_departement if s not in specialites_combined])
         
-        # Étape 2: Si toujours moins de 12 résultats, compléter avec les spécialités dans la même région
-        if len(specialites_combined) < 12:
+        # Étape 2: Si toujours moins de 1 résultats, compléter avec les spécialités dans la même région
+        if len(specialites_combined) < 1:
             departement = Departement.objects.get(id=departement_id)
             region_id = departement.region.id
             etablissements_in_region = Etablissement.objects.filter(lieux__departement__region__id=region_id)
             specialites_region = specialites.filter(etablissement__in=etablissements_in_region).distinct()
             specialites_combined.extend([s for s in specialites_region if s not in specialites_combined])
         
-        # Étape 3: Si toujours moins de 12 résultats, compléter avec les spécialités restantes dans la base de données
-        if len(specialites_combined) < 12:
+        # Étape 3: Si toujours moins de 1 résultats, compléter avec les spécialités restantes dans la base de données
+        if len(specialites_combined) < 1:
             remaining_specialites = specialites.exclude(id__in=[s.id for s in specialites_combined])
             specialites_combined.extend(remaining_specialites[:12 - len(specialites_combined)])
         

@@ -65,42 +65,17 @@ class SpecialitesByFormationView(generics.ListAPIView):
         formation_id = self.kwargs['formation_id']
         specialite_id = self.kwargs['specialite_id']
         ville_id = self.kwargs['ville_id']
-        
-        # Filtrer les établissements par ville
+           # Filtrer les établissements par ville
         etablissements_in_ville = Etablissement.objects.filter(lieux__id=ville_id)
         
-        # Filtrer les spécialités par formation et exclure l'ID de la spécialité
-        specialites = Specialite.objects.filter(formation__id=formation_id).exclude(id=specialite_id)
-        
-        # Collecter les spécialités de différentes sources pour les combiner plus tard
-        specialites_ville = specialites.filter(etablissement__in=etablissements_in_ville).distinct()
-        
-        # Étape 1: Si moins de 1 résultats, compléter avec les spécialités dans le même département
-        specialites_combined = list(specialites_ville)
-        if len(specialites_combined) < 1:
-            ville = Ville.objects.get(id=ville_id)
-            departement_id = ville.departement.id
-            etablissements_in_departement = Etablissement.objects.filter(lieux__departement__id=departement_id)
-            specialites_departement = specialites.filter(etablissement__in=etablissements_in_departement).distinct()
-            specialites_combined.extend([s for s in specialites_departement if s not in specialites_combined])
-        
-        # Étape 2: Si toujours moins de 1 résultats, compléter avec les spécialités dans la même région
-        if len(specialites_combined) < 1:
-            departement = Departement.objects.get(id=departement_id)
-            region_id = departement.region.id
-            etablissements_in_region = Etablissement.objects.filter(lieux__departement__region__id=region_id)
-            specialites_region = specialites.filter(etablissement__in=etablissements_in_region).distinct()
-            specialites_combined.extend([s for s in specialites_region if s not in specialites_combined])
-        
-        # Étape 3: Si toujours moins de 1 résultats, compléter avec les spécialités restantes dans la base de données
-        if len(specialites_combined) < 1:
-            remaining_specialites = specialites.exclude(id__in=[s.id for s in specialites_combined])
-            specialites_combined.extend(remaining_specialites[:12 - len(specialites_combined)])
+        # Filtrer les spécialités par formation dans la ville choisie, exclure l'ID de la spécialité
+        specialites_ville = Specialite.objects.filter(
+            formation__id=formation_id,
+            etablissement__in=etablissements_in_ville
+        ).exclude(id=specialite_id).distinct()
         
         # Limiter les résultats à 12
-        specialites_combined = specialites_combined[:12]
-        
-        return specialites_combined
+        return specialites_ville[:12]
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
